@@ -40,6 +40,11 @@ class AccountSettingActivity : AppCompatActivity() {
             finish()
         }
 
+        // tombol close diberi setOnClickListener finish untuk menutup activity
+        binding.btnClose.setOnClickListener {
+            finish()
+        }
+
         // jika ada user yang login
         FirebaseAuth.getInstance().currentUser?.let { currentUser ->
             // dapatkan UID dari User yang login
@@ -59,15 +64,9 @@ class AccountSettingActivity : AppCompatActivity() {
                             val user = snapshot.getValue(User::class.java)
                             binding.run {
                                 // Masukkan data name, username, dan Bio ke dalam EditText
-                                inputName.text = user?.fullname.let { fullName ->
-                                    SpannableStringBuilder(fullName)
-                                }
-                                inputUsername.text = user?.username.let { userName ->
-                                    SpannableStringBuilder(userName)
-                                }
-                                inputBio.text = user?.Bio.let { bio ->
-                                    SpannableStringBuilder(bio)
-                                }
+                                inputName.text = SpannableStringBuilder(user?.fullname)
+                                inputUsername.text = SpannableStringBuilder(user?.username)
+                                inputBio.text = SpannableStringBuilder(user?.Bio)
                             }
                         }
                     }
