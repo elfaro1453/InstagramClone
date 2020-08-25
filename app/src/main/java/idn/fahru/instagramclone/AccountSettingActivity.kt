@@ -3,7 +3,7 @@ package idn.fahru.instagramclone
 import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.util.Log
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.google.firebase.auth.EmailAuthProvider
@@ -73,28 +73,41 @@ class AccountSettingActivity : AppCompatActivity() {
             binding.btnDelete.setOnClickListener {
 
                 // buat credential berisi email dan password dari user
-                val password = "12341234"
+                val password = binding.inputPassword.text.toString()
                 val emailUser = currentUser.email.toString()
 
-                val credential = EmailAuthProvider.getCredential(emailUser, password)
-                // reauthenticate untuk login ulang dari sistem
-                currentUser.reauthenticate(credential).addOnCompleteListener { task ->
-                    if (task.isSuccessful) { // jika berhasil login
-                        // hapus user saat ini yang ada di authenticate firebase
-                        currentUser.delete()
-                        // hapus user infonya juga yang ada di realtime database firebase
-                        userInfo.removeValue()
-                        // hapus user selesai
-                        // Logout dari firebase
-                        FirebaseAuth.getInstance().signOut()
-                        // intent menuju activity login
-                        val intent = Intent(this, LoginActivity::class.java)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-                        startActivity(intent)
-                        // finish (hapus) activity account setting activity
-                        finish()
-                    } else {
-                        Log.e("ErrorReauthentic", task.exception.toString())
+                if (password.isEmpty()) {
+                    Toast.makeText(this, "Masukkan Ulang Password", Toast.LENGTH_SHORT).show()
+                    binding.inputPassword.visibility = View.VISIBLE
+                } else {
+                    binding.inputPassword.visibility = View.GONE
+
+                    val credential = EmailAuthProvider.getCredential(emailUser, password)
+                    // reauthenticate untuk login ulang dari sistem
+                    currentUser.reauthenticate(credential).addOnCompleteListener { task ->
+                        if (task.isSuccessful) { // jika berhasil login
+                            // hapus user saat ini yang ada di authenticate firebase
+                            currentUser.delete()
+                            // hapus user infonya juga yang ada di realtime database firebase
+                            userInfo.removeValue()
+                            // hapus user selesai
+                            // Logout dari firebase
+                            FirebaseAuth.getInstance().signOut()
+                            // intent menuju activity login
+                            val intent = Intent(this, LoginActivity::class.java)
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                            startActivity(intent)
+                            // finish (hapus) activity account setting activity
+                            finish()
+                        } else {
+                            Toast.makeText(
+                                this,
+                                "Error : " + task.exception.toString(),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            binding.inputPassword.visibility = View.VISIBLE
+                            binding.inputPassword.text.clear()
+                        }
                     }
                 }
             }
@@ -165,6 +178,9 @@ class AccountSettingActivity : AppCompatActivity() {
             userInfo.updateChildren(userMap)
             Toast.makeText(this@AccountSettingActivity, "User Telah Diupdate", Toast.LENGTH_SHORT)
                 .show()
+
+            // finish untuk keluar dari accountsetting
+            finish()
         }
     }
 }
