@@ -3,8 +3,10 @@ package idn.fahru.instagramclone
 import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableStringBuilder
+import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import idn.fahru.instagramclone.databinding.ActivityAccountSettingBinding
@@ -16,6 +18,9 @@ class AccountSettingActivity : AppCompatActivity() {
 
     // buat variabel userInfo berisi database reference
     private lateinit var userInfo: DatabaseReference
+
+    // buat variabel user yang berisi model user
+    private lateinit var user: User
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -66,15 +71,32 @@ class AccountSettingActivity : AppCompatActivity() {
             // jika ada user yang login maka tombol delete akun bisa diklik
             // tombol delete akun setonclick untuk menghapus akun
             binding.btnDelete.setOnClickListener {
-                // hapus akun start
-                userInfo.removeValue()
-                // hapus akun end
 
-                // intent ke login activity
-                val intent = Intent(this, LoginActivity::class.java)
-                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
-                startActivity(intent)
-                finish()
+                // buat credential berisi email dan password dari user
+                val password = "12341234"
+                val emailUser = currentUser.email.toString()
+
+                val credential = EmailAuthProvider.getCredential(emailUser, password)
+                // reauthenticate untuk login ulang dari sistem
+                currentUser.reauthenticate(credential).addOnCompleteListener { task ->
+                    if (task.isSuccessful) { // jika berhasil login
+                        // hapus user saat ini yang ada di authenticate firebase
+                        currentUser.delete()
+                        // hapus user infonya juga yang ada di realtime database firebase
+                        userInfo.removeValue()
+                        // hapus user selesai
+                        // Logout dari firebase
+                        FirebaseAuth.getInstance().signOut()
+                        // intent menuju activity login
+                        val intent = Intent(this, LoginActivity::class.java)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK or Intent.FLAG_ACTIVITY_NEW_TASK)
+                        startActivity(intent)
+                        // finish (hapus) activity account setting activity
+                        finish()
+                    } else {
+                        Log.e("ErrorReauthentic", task.exception.toString())
+                    }
+                }
             }
 
             // ambil data dari userInfo
@@ -83,12 +105,12 @@ class AccountSettingActivity : AppCompatActivity() {
                     override fun onDataChange(snapshot: DataSnapshot) {
                         if (snapshot.exists()) {
                             // jadikan data dari firebase menjadi data class User
-                            val user = snapshot.getValue(User::class.java)
+                            user = snapshot.getValue(User::class.java) as User
                             binding.run {
                                 // Masukkan data name, username, dan Bio ke dalam EditText
-                                inputName.text = SpannableStringBuilder(user?.fullname)
-                                inputUsername.text = SpannableStringBuilder(user?.username)
-                                inputBio.text = SpannableStringBuilder(user?.Bio)
+                                inputName.text = SpannableStringBuilder(user.fullname)
+                                inputUsername.text = SpannableStringBuilder(user.username)
+                                inputBio.text = SpannableStringBuilder(user.Bio)
                             }
                         }
                     }
@@ -132,9 +154,12 @@ class AccountSettingActivity : AppCompatActivity() {
             // buat userMap yang menyimpan data terupdate
             // nama variabel dalam userMap harus persis sama dengan yang ada di firebase
             val userMap = HashMap<String, Any>()
-            userMap["fullname"] = fullName
-            userMap["username"] = userName
             userMap["Bio"] = userBio
+            userMap["email"] = user.email
+            userMap["fullname"] = fullName
+            userMap["image"] = user.image
+            userMap["uid"] = user.uid
+            userMap["username"] = userName
 
             // Update data yang ada pada firebase
             userInfo.updateChildren(userMap)
