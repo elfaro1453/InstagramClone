@@ -84,7 +84,13 @@ class AccountSettingActivity : AppCompatActivity() {
                 .child(uidUser)
 
             // Aktifkan firebasestorage
+            // Buat folder bernama ProfilPict atau terserah antum dah nama foldernya
             firebaseStorage = FirebaseStorage.getInstance().reference.child("ProfilPict")
+
+            // Mengaktifkan tombol ganti gambar agar membuka Crop Gambar
+            binding.btnChange.setOnClickListener {
+                CropImage.activity().setAspectRatio(1, 1).start(this)
+            }
 
             // jika ada user yang login maka tombol delete akun bisa diklik
             // tombol delete akun setonclick untuk menghapus akun
@@ -158,11 +164,6 @@ class AccountSettingActivity : AppCompatActivity() {
                     }
                 }
             )
-
-            // mengaktifkan tombol ganti gambar
-            binding.btnChange.setOnClickListener {
-                CropImage.activity().setAspectRatio(1, 1).start(this)
-            }
         }
     }
 
@@ -176,13 +177,12 @@ class AccountSettingActivity : AppCompatActivity() {
             Log.e("ImageUri", "Berhasil")
             // ambil URI gambar
             val resultUriImage = CropImage.getActivityResult(data).uri
-            // mulai dialog
+            // mulai loading dialog
             dialog.startLoadingDialog()
             // buat url gambar di firebase
             val fileRef = firebaseStorage.child(user.uid + ".jpg")
             // upload gambar
             val uploadImage = fileRef.putFile(resultUriImage)
-
             // https://firebase.google.com/docs/storage/android/upload-files?hl=id#get_a_download_url
             uploadImage.continueWithTask { task ->
                 if (!task.isSuccessful) {
