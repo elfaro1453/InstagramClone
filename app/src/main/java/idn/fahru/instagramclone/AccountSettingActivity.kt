@@ -1,14 +1,20 @@
 package idn.fahru.instagramclone
 
+import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableStringBuilder
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.bumptech.glide.Glide
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
+import com.theartofdev.edmodo.cropper.CropImage
 import idn.fahru.instagramclone.databinding.ActivityAccountSettingBinding
 import idn.fahru.instagramclone.model.User
 
@@ -19,8 +25,14 @@ class AccountSettingActivity : AppCompatActivity() {
     // buat variabel userInfo berisi database reference
     private lateinit var userInfo: DatabaseReference
 
-    // buat variabel user yang berisi model user
+    // buat variabel user yang berisi model user dari struktur data di firebase
     private lateinit var user: User
+
+    // buat variabel untuk mengakses Storage Firebase
+    private lateinit var firebaseStorage: StorageReference
+
+    // buat variabel dialog untuk menampilkan loading
+    private lateinit var dialog: LoadingDialog
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -30,6 +42,9 @@ class AccountSettingActivity : AppCompatActivity() {
         binding = ActivityAccountSettingBinding.inflate(inflater)
         setContentView(binding.root)
         // pengaturan viewbinding selesai
+
+        // inisialisasi dialog
+        dialog = LoadingDialog(this)
 
         // setting agar button logout bisa logout dari firebase
         // dan kembali ke activity login
@@ -67,6 +82,9 @@ class AccountSettingActivity : AppCompatActivity() {
                 // nama ini harus persis
                 .child("users")
                 .child(uidUser)
+
+            // Aktifkan firebasestorage
+            firebaseStorage = FirebaseStorage.getInstance().reference.child("ProfilPict")
 
             // jika ada user yang login maka tombol delete akun bisa diklik
             // tombol delete akun setonclick untuk menghapus akun
@@ -124,6 +142,14 @@ class AccountSettingActivity : AppCompatActivity() {
                                 inputName.text = SpannableStringBuilder(user.fullname)
                                 inputUsername.text = SpannableStringBuilder(user.username)
                                 inputBio.text = SpannableStringBuilder(user.Bio)
+                                // tambahkan glide untuk menambah gambar
+                                var urlImage = user.image
+                                if (urlImage.isEmpty()) urlImage =
+                                    "https://firebasestorage.googleapis.com/v0/b/instagram-clone-7f7c1.appspot.com/o/yo.jpg?alt=media&token=c888181c-1759-4e5a-b62d-0792bf362d55"
+                                Glide.with(this@AccountSettingActivity)
+                                    .load(urlImage)
+                                    .circleCrop()
+                                    .into(imgProfile)
                             }
                         }
                     }
@@ -132,6 +158,54 @@ class AccountSettingActivity : AppCompatActivity() {
                     }
                 }
             )
+
+            // mengaktifkan tombol ganti gambar
+            binding.btnChange.setOnClickListener {
+                CropImage.activity().setAspectRatio(1, 1).start(this)
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        // jika sukses mengambil gambar dari galeri + crop
+        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE
+            && resultCode == Activity.RESULT_OK
+            && data != null
+        ) {
+            Log.e("ImageUri", "Berhasil")
+            // ambil URI gambar
+            val resultUriImage = CropImage.getActivityResult(data).uri
+            // mulai dialog
+            dialog.startLoadingDialog()
+            // buat url gambar di firebase
+            val fileRef = firebaseStorage.child(user.uid + ".jpg")
+            // upload gambar
+            val uploadImage = fileRef.putFile(resultUriImage)
+
+            // https://firebase.google.com/docs/storage/android/upload-files?hl=id#get_a_download_url
+            uploadImage.continueWithTask { task ->
+                if (!task.isSuccessful) {
+                    task.exception?.let {
+                        throw it
+                    }
+                }
+                fileRef.downloadUrl
+            }.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    user.image = task.result.toString()
+                    Glide.with(this@AccountSettingActivity)
+                        .load(task.result.toString())
+                        .circleCrop()
+                        .into(binding.imgProfile)
+                    updateUserInfo()
+                    dialog.dismissDialog()
+                    Toast.makeText(this, "Sukses Upload Foto Profil", Toast.LENGTH_SHORT).show()
+                } else {
+                    dialog.dismissDialog()
+                    Toast.makeText(this, "Gagal Upload Foto Profil", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
@@ -180,7 +254,7 @@ class AccountSettingActivity : AppCompatActivity() {
                 .show()
 
             // finish untuk keluar dari accountsetting
-            finish()
+            // finish()
         }
     }
 }
