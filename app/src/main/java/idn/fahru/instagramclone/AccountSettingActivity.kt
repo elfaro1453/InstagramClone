@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Bundle
 import android.text.SpannableStringBuilder
-import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -167,24 +166,28 @@ class AccountSettingActivity : AppCompatActivity() {
         }
     }
 
+    // onActivityResult digunakan untuk menerima data dari activity lain
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        // jika sukses mengambil gambar dari galeri + crop
+        // karena banyak jenis request Code
+        // maka untuk mengambil data dari Activity CropImage kita gunakan request kode CropImage
         if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE
             && resultCode == Activity.RESULT_OK
             && data != null
         ) {
-            Log.e("ImageUri", "Berhasil")
-            // ambil URI gambar
+            // Jika TIDAK ada eror maupun cancel dari user saat crop image
+            // maka fungsi di dalam ini akan dijalankan
+
+            // ambil gambar dari cropimage
             val resultUriImage = CropImage.getActivityResult(data).uri
             // mulai loading dialog
             dialog.startLoadingDialog()
-            // buat url gambar di firebase
+            // buat URL gambar di firebase
             val fileRef = firebaseStorage.child(user.uid + ".jpg")
             // upload gambar
             val uploadImage = fileRef.putFile(resultUriImage)
             // https://firebase.google.com/docs/storage/android/upload-files?hl=id#get_a_download_url
-            uploadImage.continueWithTask { task ->
+            val urlTask = uploadImage.continueWithTask { task ->
                 if (!task.isSuccessful) {
                     task.exception?.let {
                         throw it
@@ -193,15 +196,22 @@ class AccountSettingActivity : AppCompatActivity() {
                 fileRef.downloadUrl
             }.addOnCompleteListener { task ->
                 if (task.isSuccessful) {
-                    user.image = task.result.toString()
+                    // jika upload sukses
+                    // dapatkan URL Download dari foto profil
+                    val downloadUri = task.result
+                    user.image = downloadUri.toString()
+                    // Masukkan foto profil baru menggunakan Glide
                     Glide.with(this@AccountSettingActivity)
-                        .load(task.result.toString())
+                        .load(user.image)
                         .circleCrop()
                         .into(binding.imgProfile)
+                    // update user info
                     updateUserInfo()
+                    // hilangkan loading bar
                     dialog.dismissDialog()
                     Toast.makeText(this, "Sukses Upload Foto Profil", Toast.LENGTH_SHORT).show()
                 } else {
+                    // Handle failures
                     dialog.dismissDialog()
                     Toast.makeText(this, "Gagal Upload Foto Profil", Toast.LENGTH_SHORT).show()
                 }
@@ -254,7 +264,7 @@ class AccountSettingActivity : AppCompatActivity() {
                 .show()
 
             // finish untuk keluar dari accountsetting
-            // finish()
+            finish()
         }
     }
 }
