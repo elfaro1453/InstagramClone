@@ -148,9 +148,12 @@ class AccountSettingActivity : AppCompatActivity() {
                                 inputUsername.text = SpannableStringBuilder(user.username)
                                 inputBio.text = SpannableStringBuilder(user.Bio)
                                 // tambahkan glide untuk menambah gambar
+                                // cek jika user memiliki gambar
                                 var urlImage = user.image
+                                // jika url gambar kosong maka ganti dengan gambar standar
                                 if (urlImage.isEmpty()) urlImage =
-                                    "https://firebasestorage.googleapis.com/v0/b/instagram-clone-7f7c1.appspot.com/o/yo.jpg?alt=media&token=c888181c-1759-4e5a-b62d-0792bf362d55"
+                                    "https://tanjungpinangkota.bawaslu.go.id/wp-content/uploads/2020/05/default-1.jpg"
+                                // masukkan gambar ke dalam imageView
                                 Glide.with(this@AccountSettingActivity)
                                     .load(urlImage)
                                     .circleCrop()
