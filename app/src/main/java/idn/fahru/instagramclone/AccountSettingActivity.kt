@@ -190,7 +190,7 @@ class AccountSettingActivity : AppCompatActivity() {
             // upload gambar
             val uploadImage = fileRef.putFile(resultUriImage)
             // https://firebase.google.com/docs/storage/android/upload-files?hl=id#get_a_download_url
-            val urlTask = uploadImage.continueWithTask { task ->
+            uploadImage.continueWithTask { task ->
                 if (!task.isSuccessful) {
                     task.exception?.let {
                         throw it
