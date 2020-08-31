@@ -11,6 +11,7 @@ import idn.fahru.instagramclone.model.User
 
 class ItemUserVH(private val binding: ItemUserBinding) : RecyclerView.ViewHolder(binding.root) {
 
+    // fungsi untuk memasukkan data dari adapter ke dalam view
     fun bind(user: User) {
         binding.run {
             // mengisi textview dengan data yang dibutuhkan

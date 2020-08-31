@@ -51,6 +51,7 @@ class RegisterActivity : AppCompatActivity() {
         // gunakan binding.run karena kita akan akses view di layout
         binding.run {
             // ambil nilai yang dimasukkan ke dalam masing-masing editText
+            val emailnya = inputEmail.text.toString()
             val fullName = inputFullname.text.toString()
             val emailUser = inputEmail.text.toString()
             val userName = inputUsername.text.toString()

@@ -2,7 +2,6 @@ package idn.fahru.instagramclone.recyclerview.adapter
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
-import android.widget.FrameLayout
 import androidx.recyclerview.widget.RecyclerView
 import idn.fahru.instagramclone.databinding.ItemUserBinding
 import idn.fahru.instagramclone.model.User
@@ -35,20 +34,20 @@ class ItemUserAdapter : RecyclerView.Adapter<ItemUserVH>() {
     }
 
     override fun onBindViewHolder(holder: ItemUserVH, position: Int) {
-        // margin untuk layout
-        val marginLeft = dpToPx(8)
-        val marginTop = dpToPx(8)
-        val marginRight = dpToPx(8)
-        val marginBottom = dpToPx(8)
-        // buat layout parameter baru untuk item_user
-        val newLayoutParams = FrameLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT,
-            ViewGroup.LayoutParams.WRAP_CONTENT
-        )
-        // set margin parameter terbaru
-        newLayoutParams.setMargins(marginLeft, marginTop, marginRight, marginBottom)
-        // masukkan layout parameter baru ke dalam viewholder
-        holder.itemView.layoutParams = newLayoutParams
+//        // margin untuk layout
+//        val marginLeft = dpToPx(8)
+//        val marginTop = dpToPx(8)
+//        val marginRight = dpToPx(8)
+//        val marginBottom = dpToPx(8)
+//        // buat layout parameter baru untuk item_user
+//        val newLayoutParams = FrameLayout.LayoutParams(
+//            ViewGroup.LayoutParams.MATCH_PARENT,
+//            ViewGroup.LayoutParams.WRAP_CONTENT
+//        )
+//        // set margin parameter terbaru
+//        newLayoutParams.setMargins(marginLeft, marginTop, marginRight, marginBottom)
+//        // masukkan layout parameter baru ke dalam viewholder
+//        holder.itemView.layoutParams = newLayoutParams
         // ambil data sesuai posisinya
         val data = listData[position]
         // masukkan ke dalam viewholder

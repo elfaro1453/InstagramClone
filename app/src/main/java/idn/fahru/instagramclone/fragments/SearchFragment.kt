@@ -13,6 +13,7 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
+import idn.fahru.instagramclone.R
 import idn.fahru.instagramclone.databinding.FragmentSearchBinding
 import idn.fahru.instagramclone.model.User
 import idn.fahru.instagramclone.recyclerview.adapter.ItemUserAdapter
@@ -58,7 +59,9 @@ class SearchFragment : Fragment() {
             object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?): Boolean {
                     // Jika keyword dirubah dan tombol enter ditekan maka fungsi ini berjalan
-                    Toast.makeText(view.context, query.toString(), Toast.LENGTH_SHORT).show()
+                    val stringTemplate =
+                        binding.root.resources.getString(R.string.textinput, query.toString(), 20)
+                    Toast.makeText(view.context, stringTemplate, Toast.LENGTH_SHORT).show()
                     return false
                 }
 
@@ -85,8 +88,6 @@ class SearchFragment : Fragment() {
             object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     if (snapshot.exists()) {
-                        Log.e("SnapshotExist", "Yes")
-                        Log.e("SnapshotSum", snapshot.childrenCount.toString())
                         // buat variabel sebagai wadah dari data user
                         val listUser = arrayListOf<User>()
                         // snapshot berisi 10 data sesuai dengan limitnya
