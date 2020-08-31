@@ -13,7 +13,6 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
-import idn.fahru.instagramclone.R
 import idn.fahru.instagramclone.databinding.FragmentSearchBinding
 import idn.fahru.instagramclone.model.User
 import idn.fahru.instagramclone.recyclerview.adapter.ItemUserAdapter
@@ -51,17 +50,24 @@ class SearchFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // jalankan getUsers di awal
-        getUsers()
+        // letakkan getAllUsers() di paling atas agar fungsi ini berjalan lebih dahulu
+        // sehingga yang pertama kali tampil ketika SearchFragment dibuka adalah semua users yang ada
+        getAllUsers()
 
         // mendeteksi perubahan keyword pada searchView
         binding.searchView.setOnQueryTextListener(
             object : SearchView.OnQueryTextListener {
                 override fun onQueryTextSubmit(query: String?): Boolean {
                     // Jika keyword dirubah dan tombol enter ditekan maka fungsi ini berjalan
-                    val stringTemplate =
-                        binding.root.resources.getString(R.string.textinput, query.toString(), 20)
-                    Toast.makeText(view.context, stringTemplate, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(view.context, query.toString(), Toast.LENGTH_SHORT).show()
+                    // panggil fungsi getAllUsers jika tidak ada keyword yang dimasukkan
+                    if (query.isNullOrEmpty()) {
+                        // query.isNullEmpty itu untuk cek kalau variabel query tidak null atau kosong
+                        getAllUsers()
+                    } else {
+                        // jalankan fungsi searchUser untuk mencari user sesuai keyword
+                        searchUser(query)
+                    }
                     return false
                 }
 
@@ -73,35 +79,84 @@ class SearchFragment : Fragment() {
         )
     }
 
-    // buat fungsi mendapatkan semua user dari firebase realtime database
-    private fun getUsers() {
-        val usersDB = FirebaseDatabase.getInstance()
-            .reference
+    // buat fungsi untuk mendapatkan semua User, getAllUsers()
+    private fun getAllUsers() {
+        // tentukan Tabel yang akan diambil datanya
+        val usersDB = FirebaseDatabase.getInstance().reference
             // ambil data dari tabel users
             .child("users")
             // urutkan berdasarkan fullname
             .orderByChild("fullname")
-            // batasi 10 data pertama
+            // batasi data yang diambil sebanyak 10 data pertama
             .limitToFirst(10)
+
+        // ambil nilai dari usersDB (value itu artinya nilai)
+        usersDB.addValueEventListener(
+            object : ValueEventListener {
+                // fungsi onDataChange berjalan jika sukses
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    // pastikan snapshot ada, snapshot adalah data hasil pengambilan dari database
+                    if (snapshot.exists()) {
+                        // buat array kosong yang hanya bisa diisi oleh model User
+                        val users = arrayListOf<User>()
+                        // buat variabel berisi ukuran data yang didapatkan
+                        val dataSize = snapshot.childrenCount
+                        // jika ukuran data lebih besar dari 0, maka lakukan pengambilan data
+                        if (dataSize > 0) {
+                            // lakukan perulangan masing-masing data
+                            for (data in snapshot.children) {
+                                val user = data.getValue(User::class.java) as User
+                                // tambahkan data user ke dalam array
+                                users.add(user)
+                            }
+                            // masukkan kumpulan data users ke dalam adapter recyclerview
+                            adapterRV.addData(users)
+                        }
+                    }
+                }
+
+                // fungsi onCancelled berjalan ketika ada error
+                override fun onCancelled(error: DatabaseError) {
+                    Log.e("Error Search", error.details)
+                }
+            }
+        )
+
+    }
+
+    // buat fungsi searchUser() berdasarkan keyword fullname
+    private fun searchUser(keyword: String) {
+        val usersDB = FirebaseDatabase.getInstance().reference
+            .child("users")
+            .orderByChild("fullname")
+            .startAt(keyword)
+            .endAt("$keyword \uf8ff")
 
         usersDB.addValueEventListener(
             object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
+                    // pastikan snapshot ada, snapshot adalah data hasil pengambilan dari database
                     if (snapshot.exists()) {
-                        // buat variabel sebagai wadah dari data user
-                        val listUser = arrayListOf<User>()
-                        // snapshot berisi 10 data sesuai dengan limitnya
-                        // lakukan perulangan pada tiap data
-                        for (data in snapshot.children) {
-                            val user = data.getValue(User::class.java) as User
-                            listUser.add(user)
+                        // buat array kosong yang hanya bisa diisi oleh model User
+                        val users = arrayListOf<User>()
+                        // buat variabel berisi ukuran data yang didapatkan
+                        val dataSize = snapshot.childrenCount
+                        // jika ukuran data lebih besar dari 0, maka lakukan pengambilan data
+                        if (dataSize > 0) {
+                            // lakukan perulangan masing-masing data
+                            for (data in snapshot.children) {
+                                val user = data.getValue(User::class.java) as User
+                                // tambahkan data user ke dalam array
+                                users.add(user)
+                            }
+                            // masukkan kumpulan data users ke dalam adapter recyclerview
+                            adapterRV.addData(users)
                         }
-                        adapterRV.addData(listUser)
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    Log.e("SnapshotError", error.details)
+                    Log.e("Error Search", error.details)
                 }
             }
         )
