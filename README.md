@@ -13,6 +13,9 @@ Instagram Clone SMK IDN
   8. Ganti ApplicationID yang ada di build.gradle module app sesuai nama package dari no 7 diatas
   9. Daftarkan aplikasi ke firebase, dengan memasukkan nama package dan SHA1
   Note: SHA1 didapatkan dari Gradle - Signin Report
+  10. Tambahkan google-services.json ke dalam project folder app
+  11. Sync Now Aplikasi
+  12. Jalankan Aplikasi
   
 ## Urutan mempelajari aplikasi instagram clone
 
