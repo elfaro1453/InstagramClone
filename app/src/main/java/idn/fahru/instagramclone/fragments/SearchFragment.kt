@@ -61,7 +61,7 @@ class SearchFragment : Fragment() {
                     // Jika keyword dirubah dan tombol enter ditekan maka fungsi ini berjalan
                     Toast.makeText(view.context, query.toString(), Toast.LENGTH_SHORT).show()
                     // panggil fungsi getAllUsers jika tidak ada keyword yang dimasukkan
-                    if (query.isNullOrEmpty()) {
+                    if (query.isNullOrBlank()) {
                         // query.isNullEmpty itu untuk cek kalau variabel query tidak null atau kosong
                         getAllUsers()
                     } else {
@@ -73,6 +73,8 @@ class SearchFragment : Fragment() {
 
                 override fun onQueryTextChange(newText: String?): Boolean {
                     // Fungsi akan berjalan setiap kali ada perubahan keyword
+                    // cek jika keyword tidak berisi kata-kata maka tampilkan semua user
+                    if (newText.isNullOrBlank()) getAllUsers()
                     return false
                 }
             }

@@ -25,4 +25,9 @@
         android:name="idn.fahru.instagramclone.fragments.SearchFragment"
         android:label="fragment_search"
         tools:layout="@layout/fragment_search" />
+    <activity
+        android:id="@+id/uploadActivity"
+        android:name="idn.fahru.instagramclone.UploadActivity"
+        android:label="activity_upload"
+        tools:layout="@layout/activity_upload" />
 </navigation>

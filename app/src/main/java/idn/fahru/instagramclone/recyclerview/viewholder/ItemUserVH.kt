@@ -36,7 +36,10 @@ class ItemUserVH(private val binding: ItemUserBinding) : RecyclerView.ViewHolder
                 .into(imgProfile)
 
             btnFollow.setOnClickListener {
+                // cek apakah teks pada tombol btnFollow itu "Follow"
                 if (btnFollow.text.toString() == "Follow") {
+                    // jika teks tombol masih follow berarti user belum difollow
+                    // kuy kita follow di firebase
                     FirebaseDatabase.getInstance().reference
                         .child("Follow").child(currentProfile).child("Following")
                         .child(user.uid)
